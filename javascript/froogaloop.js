@@ -8,7 +8,6 @@ var Froogaloop = (function(){
 
     var eventCallbacks = {},
         hasWindowEvent = false,
-        isReady = false,
         slice = Array.prototype.slice,
         playerOrigin = '*';
 
@@ -74,7 +73,7 @@ var Froogaloop = (function(){
             if (eventName != 'ready') {
                 postMessage('addEventListener', eventName, element);
             }
-            else if (eventName == 'ready' && isReady) {
+            else if (eventName == 'ready' && element && element.hasAttribute('data-froogaloop-ready')) {
                 callback.call(null, target_id);
             }
 
@@ -141,10 +140,6 @@ var Froogaloop = (function(){
             //fail silently... like a ninja!
         }
 
-        if (method == 'ready' && !isReady) {
-            isReady = true;
-        }
-
         // Handles messages from the vimeo player only
         if (!(/^https?:\/\/player.vimeo.com/).test(event.origin)) {
             return false;
@@ -157,9 +152,13 @@ var Froogaloop = (function(){
         var value = data.value,
             eventData = data.data,
             target_id = target_id === '' ? null : data.player_id,
-
+            iframe = document.getElementById(target_id),
             callback = getCallback(method, target_id),
             params = [];
+
+        if (method == 'ready' && iframe && !iframe.hasAttribute('data-froogaloop-ready')) {
+          iframe.setAttribute('data-froogaloop-ready', true);
+        }
 
         if (!callback) {
             return false;
